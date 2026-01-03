@@ -1,0 +1,20 @@
+{
+  "name": "devnet",
+  "version": "1.0.0",
+  "description": "Project to learn about node.js and a platform for devs to connect",
+  "main": "index.js",
+  "scripts": {
+    "start":"node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "keywords": [
+    "node.js",
+    "express",
+    "javascript"
+  ],
+  "author": "Mridul",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
