@@ -4,7 +4,7 @@
   "description": "Project to learn about node.js and a platform for devs to connect",
   "main": "index.js",
   "scripts": {
-    "start":"node src/app.js",
+    "start": "node src/app.js",
     "dev": "nodemon src/app.js"
   },
   "keywords": [
@@ -15,6 +15,7 @@
   "author": "Mridul",
   "license": "ISC",
   "dependencies": {
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "mongoose": "^9.1.2"
   }
 }
