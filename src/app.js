@@ -1,6 +1,7 @@
 const express = require("express");
 const { connectDB } = require("./config/database");
 const User = require("./models/user");
+const { Error } = require("mongoose");
 const app = express();
 
 app.use(express.json());
@@ -14,22 +15,35 @@ app.delete("/user", async (req, res) => {
       res.send("Deleted user successfully!");
     }
   } catch (err) {
-    res.status(400).send("Something went wrong delete!");
+    res.status(400).send("Something went wrong delete!" + err.message);
   }
 });
 
-app.patch("/user", async (req, res) => {
+app.patch("/user/:userId", async (req, res) => {
   try {
-    const userId = req.body.userId;
+    const userId = req.params?.userId;
     const data = req.body;
-    const user = await User.findByIdAndUpdate(userId, data);
+
+    const ALLOWED_UPDATES = ["age", "gender", "skills", "about"];
+    const isUpdateAllowed = Object.keys(data).every((k) =>
+      ALLOWED_UPDATES.includes(k)
+    );
+    if (!isUpdateAllowed) {
+      throw new Error("Update not allowed");
+    }
+    if (data.skills?.length > 15) {
+      throw new Error("More than 15 skills are not allowed.");
+    }
+    const user = await User.findByIdAndUpdate(userId, data, {
+      runValidators: true,
+    });
     if (!user) {
       res.status(404).send("Could not find user!");
     } else {
       res.send("Updated User successfully");
     }
   } catch (err) {
-    res.status(400).send("Something went wrong update!");
+    res.status(400).send("Something went wrong update!" + err.message);
   }
 });
 
@@ -47,7 +61,7 @@ app.patch("/userUsingEmail", async (req, res) => {
       res.send(user);
     }
   } catch (err) {
-    res.status(400).send("Something went wrong update email!");
+    res.status(400).send("Something went wrong update email!" + err.message);
   }
 });
 app.get("/user", async (req, res) => {
@@ -60,7 +74,7 @@ app.get("/user", async (req, res) => {
       res.send(user);
     }
   } catch (err) {
-    res.status(400).send("Something went wrong!");
+    res.status(400).send("Something went wrong!" + err.message);
   }
 });
 app.get("/feed", async (req, res) => {
@@ -72,7 +86,7 @@ app.get("/feed", async (req, res) => {
       res.send(users);
     }
   } catch (err) {
-    res.status(400).send("Something went wrong!");
+    res.status(400).send("Something went wrong!" + err.message);
   }
 });
 
@@ -90,10 +104,19 @@ app.get("/userId", async (req, res) => {
   }
 });
 app.post("/signup", async (req, res) => {
-  const user = new User(req.body);
-  user.save();
-  res.send("User saved successfully!");
+  try {
+    const user = new User(req.body);
+    if (!user) {
+      res.status(404).send("Wrong Wrong Wrong");
+    } else {
+      user.save();
+      res.send("User saved successfully!");
+    }
+  } catch (err) {
+    res.status(400).send("Something went wrong! " + err.message);
+  }
 });
+
 connectDB()
   .then(() => {
     console.log("Database is connected successfully!!");
