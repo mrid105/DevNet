@@ -1,7 +1,8 @@
 const express = require("express");
+const bcrypt = require("bcrypt");
 const { connectDB } = require("./config/database");
 const User = require("./models/user");
-const { Error } = require("mongoose");
+const { validateSignUpData } = require("./utils/validation");
 const app = express();
 
 app.use(express.json());
@@ -103,13 +104,42 @@ app.get("/userId", async (req, res) => {
     res.status(400).send("Something went wrong!");
   }
 });
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    const user = await User.findOne({ emailId: emailId });
+    if (!user) {
+      throw new Error("Invalid credentials!");
+    } else {
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (isPasswordValid) {
+        res.send("Login successful!");
+      } else {
+        throw new Error("Invalid credentials!");
+      }
+    }
+  } catch (err) {
+    res.status(400).send("Something went wrong! : " + err.message);
+  }
+});
 app.post("/signup", async (req, res) => {
   try {
-    const user = new User(req.body);
+    //Validate the user data
+    validateSignUpData(req);
+    //Encrypt the password
+    const { firstName, lastName, emailId, password } = req.body;
+    const passwordHash = await bcrypt.hash(password, 10);
+    //Create insteance of user to save it to database
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
     if (!user) {
       res.status(404).send("Wrong Wrong Wrong");
     } else {
-      user.save();
+      await user.save();
       res.send("User saved successfully!");
     }
   } catch (err) {
